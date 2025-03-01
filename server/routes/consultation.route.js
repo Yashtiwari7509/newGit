@@ -1,12 +1,13 @@
 import { validationResult } from "express-validator";
 import Consultation from "../models/Consultation.model.js";
-import authMiddleware from "../middlewares/auth.middleware.js";
+import { authUser } from "../middleware/auth.middleware.js";
 import express from "express";
+import Doctor from "../models/doctor.model.js";
 
 const router = express.Router();
 
 // Book a consultation
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authUser, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -33,7 +34,7 @@ router.post("/", authMiddleware, async (req, res) => {
 });
 
 // Get all consultations
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/", authUser, async (req, res) => {
   try {
     const consultations = await Consultation.find().populate("doctor user");
     return res.status(200).json({ consultations });
@@ -44,7 +45,7 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 // Get a single consultation by ID
-router.get("/:id", authMiddleware, async (req, res) => {
+router.get("/:id", authUser, async (req, res) => {
   try {
     const consultation = await Consultation.findById(req.params.id).populate(
       "doctor user"
@@ -60,7 +61,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
 });
 
 // Update a consultation (e.g., change status)
-router.put("/:id", authMiddleware, async (req, res) => {
+router.put("/:id", authUser, async (req, res) => {
   try {
     const updatedConsultation = await Consultation.findByIdAndUpdate(
       req.params.id,
@@ -85,7 +86,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
 });
 
 // Delete a consultation
-router.delete("/:id", authMiddleware, async (req, res) => {
+router.delete("/:id", authUser, async (req, res) => {
   try {
     const deletedConsultation = await Consultation.findByIdAndDelete(
       req.params.id
