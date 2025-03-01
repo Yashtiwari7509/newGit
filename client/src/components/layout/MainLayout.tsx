@@ -2,7 +2,7 @@ import { Sidebar } from "./Sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Menu, Moon, Sun, X, LogOut } from "lucide-react";
-import {  memo } from "react";
+import { memo } from "react";
 // import { useIsMobile } from "@/hooks/use-mobile";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,27 +19,27 @@ import { useLogout } from "@/hooks/auth";
 import { useAuth } from "@/auth/AuthProvider";
 // import exp from "constants";
 import { Navigation } from "./Navigation";
-import VoiceNavigation from '../VoiceNavigation';
+import VoiceNavigation from "../VoiceNavigation";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 const MainLayout = ({ children }: MainLayoutProps) => {
-
   const { toast } = useToast();
   const { setTheme, theme } = useTheme();
   const navigate = useNavigate();
 
-
   const { currentDoctor, currentUser, userType, isLoading } = useAuth();
-  const logoutFun = useLogout()
+  const logoutFun = useLogout();
 
-
+  // Activate online status tracking
+  useOnlineStatus();
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
-  }
+  };
 
   const handleLogout = () => {
     logoutFun.mutate(undefined, {
@@ -53,11 +53,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     });
   };
 
-
   return (
     <div className="flex min-h-screen w-full">
       {/* Overlay when Sidebar is open on mobile */}
-        <Sidebar />
+      <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto md:ml-64">

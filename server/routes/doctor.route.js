@@ -10,6 +10,8 @@ import {
   getReviews,
 } from "../controller/doctor.controller.js";
 import { authDoctor, authUser } from "../middleware/auth.middleware.js";
+import jwt from "jsonwebtoken";
+import doctorModel from "../models/doctor.model.js";
 
 const router = express.Router();
 
@@ -73,5 +75,46 @@ router.post(
 );
 
 router.get("/reviews", authUser, getReviews);
+
+// Beacon endpoint for updating status when page unloads
+router.post("/status/beacon", async (req, res) => {
+  try {
+    // Parse the raw body
+    const body = req.body;
+    const { isOnline, lastActive } =
+      typeof body === "string" ? JSON.parse(body) : body;
+
+    // Extract token from headers
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. No token provided.",
+      });
+    }
+
+    // Verify and decode token
+    const decoded = jwt.verify(token, process.env.SECRET_TOKEN);
+    const doctorId = decoded._id;
+
+    // Update doctor status
+    await doctorModel.findByIdAndUpdate(
+      doctorId,
+      {
+        isOnline,
+        lastActive: lastActive || new Date(),
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
+    );
+
+    // Return a 204 No Content response
+    res.status(204).end();
+  } catch (error) {
+    console.error("Error updating status via beacon:", error);
+    res.status(500).end();
+  }
+});
 
 export default router;

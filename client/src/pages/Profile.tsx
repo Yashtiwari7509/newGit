@@ -30,6 +30,7 @@ import { MapPin, Wifi, WifiOff } from "lucide-react";
 import { Switch } from "@radix-ui/react-switch";
 import axios from "axios";
 import api from "@/utils/api";
+import { useSocket } from "@/utils/SocketProvider";
 
 const profileSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -48,6 +49,7 @@ const Profile = () => {
   const [isLocating, setIsLocating] = useState(false);
 
   const { currentDoctor, currentUser, isLoading, userType } = useAuth();
+  const { socket, isConnected } = useSocket();
 
   useEffect(() => {
     // Initialize online status from user data
@@ -70,6 +72,11 @@ const Profile = () => {
       });
     }
   }, [currentUser, currentDoctor, userType]);
+
+  // Update isOnline state when socket connection changes
+  useEffect(() => {
+    setIsOnline(isConnected);
+  }, [isConnected]);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -143,7 +150,7 @@ const Profile = () => {
           coordinates: [locationData.longitude, locationData.latitude],
         },
       });
-      console.log(response,'location data');
+      console.log(response, "location data");
 
       if (response.status === 200) {
         toast({
@@ -167,19 +174,48 @@ const Profile = () => {
     setIsOnline(newStatus);
 
     try {
-      const endpoint =
-        userType === "user" ? "/users/status" : "/doctors/status";
-      const response = await api.put(endpoint, {
-        isOnline: newStatus,
-        lastActive: new Date(),
-      });
-      console.log(response, "status data");
+      if (socket) {
+        if (newStatus) {
+          // Connect and emit online status
+          socket.connect();
+          socket.emit("user-connect", {
+            userId: userType === "user" ? currentUser?._id : currentDoctor?._id,
+            userType,
+          });
+        } else {
+          // Disconnect to go offline
+          socket.disconnect();
+        }
 
-      if (response.status === 200) {
-        toast({
-          title: `Status: ${newStatus ? "Online" : "Offline"}`,
-          description: `You are now ${newStatus ? "online" : "offline"}.`,
+        // Also update via API for persistence
+        const endpoint =
+          userType === "user" ? "/users/status" : "/doctors/status";
+        const response = await api.put(endpoint, {
+          isOnline: newStatus,
+          lastActive: new Date(),
         });
+
+        if (response.status === 200) {
+          toast({
+            title: `Status: ${newStatus ? "Online" : "Offline"}`,
+            description: `You are now ${newStatus ? "online" : "offline"}.`,
+          });
+        }
+      } else {
+        // Fallback to API-only if socket is not available
+        const endpoint =
+          userType === "user" ? "/users/status" : "/doctors/status";
+        const response = await api.put(endpoint, {
+          isOnline: newStatus,
+          lastActive: new Date(),
+        });
+
+        if (response.status === 200) {
+          toast({
+            title: `Status: ${newStatus ? "Online" : "Offline"}`,
+            description: `You are now ${newStatus ? "online" : "offline"}.`,
+          });
+        }
       }
     } catch (error) {
       console.error("Error updating online status:", error);

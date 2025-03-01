@@ -46,6 +46,7 @@ import { ZIM } from "zego-zim-web";
 import { randomID } from "@/lib/utils";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { Label } from "@/components/ui/label";
+import { useSocket } from "@/utils/SocketProvider";
 
 // Define types
 interface User {
@@ -116,6 +117,7 @@ interface ReviewFormData {
 const Chat = () => {
   const queryClient = useQueryClient();
   const { currentUser, currentDoctor, userType } = useAuth();
+  const { socket, isConnected } = useSocket();
   const [selectedRecipient, setSelectedRecipient] = useState<
     User | Doctor | null
   >(null);
@@ -126,7 +128,6 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isVideoCall, setIsVideoCall] = useState(false);
   const { toast } = useToast();
-  const socketRef = useRef<any>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [zegoCloud, setZegoCloud] = useState<any>(null);
@@ -237,26 +238,12 @@ const Chat = () => {
     };
   }, [currentId, currentUser, currentDoctor]);
 
-  // Initialize socket connection
+  // Use the global socket connection
   useEffect(() => {
-    if (!currentId) return;
-
-    // Connect to socket server
-    socketRef.current = io(import.meta.env.VITE_BASE_URL, {
-      query: {
-        userId: currentId,
-        userType,
-      },
-    });
-
-    // Send user connect event
-    socketRef.current.emit("user-connect", {
-      userId: currentId,
-      userType,
-    });
+    if (!socket || !currentId) return;
 
     // Listen for new messages
-    socketRef.current.on("new-message", (data) => {
+    socket.on("new-message", (data) => {
       // If the message is for the current conversation, add it to messages
       if (
         currentConversation &&
@@ -270,7 +257,7 @@ const Chat = () => {
     });
 
     // Listen for message notifications
-    socketRef.current.on("message-notification", (data) => {
+    socket.on("message-notification", (data) => {
       toast({
         title: "New Message",
         description: `You have a new message in conversation ${
@@ -279,40 +266,42 @@ const Chat = () => {
       });
     });
 
-    // Listen for user status changes
-    socketRef.current.on("user-status-change", (data) => {
-      // Update user status in the list
-      queryClient.invalidateQueries({ queryKey: ["available-users"] });
-    });
-
     // Clean up on unmount
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socket.off("new-message");
+      socket.off("message-notification");
     };
-  }, [currentId, userType]);
+  }, [socket, currentId, currentConversation]);
 
   // Fetch user conversations
   const fetchConversations = () => {
-    if (!currentId) return;
+    if (!socket || !currentId) return;
 
-    socketRef.current.emit("get-conversations", { userId: currentId });
-    socketRef.current.on("user-conversations", (data) => {
+    socket.emit("get-conversations", { userId: currentId });
+    socket.on("user-conversations", (data) => {
       setConversations(data.conversations);
     });
   };
 
-  // Fetch conversations on component mount
+  // Fetch conversations when socket is connected
   useEffect(() => {
-    if (socketRef.current) {
+    if (socket && isConnected) {
       fetchConversations();
+
+      // Set up listener for user conversations
+      socket.on("user-conversations", (data) => {
+        setConversations(data.conversations);
+      });
+
+      return () => {
+        socket.off("user-conversations");
+      };
     }
-  }, [socketRef.current]);
+  }, [socket, isConnected]);
 
   // Fetch chat history when a recipient is selected
   useEffect(() => {
-    if (!selectedRecipient || !currentId) return;
+    if (!socket || !selectedRecipient || !currentId) return;
 
     // Find existing conversation or create new one
     const recipientId = selectedRecipient._id;
@@ -324,26 +313,33 @@ const Chat = () => {
       setCurrentConversation(existingConversation);
 
       // Fetch messages for this conversation
-      socketRef.current.emit("get-chat-history", {
+      socket.emit("get-chat-history", {
         conversationId: existingConversation._id,
       });
 
-      socketRef.current.on("chat-history", (data) => {
+      // Set up listener for chat history
+      const handleChatHistory = (data) => {
         if (data.conversationId === existingConversation._id) {
           setMessages(data.messages);
 
           // Mark messages as read
-          socketRef.current.emit("mark-messages-read", {
+          socket.emit("mark-messages-read", {
             conversationId: existingConversation._id,
             userId: currentId,
           });
         }
-      });
+      };
+
+      socket.on("chat-history", handleChatHistory);
+
+      return () => {
+        socket.off("chat-history", handleChatHistory);
+      };
     } else {
       setCurrentConversation(null);
       setMessages([]);
     }
-  }, [selectedRecipient, currentId, conversations]);
+  }, [selectedRecipient, currentId, conversations, socket]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -352,7 +348,8 @@ const Chat = () => {
 
   // Send message handler
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedRecipient || !currentId) return;
+    if (!newMessage.trim() || !selectedRecipient || !currentId || !socket)
+      return;
 
     const recipientId = selectedRecipient._id;
     const recipientType = userType === "user" ? "doctor" : "user";
@@ -367,7 +364,7 @@ const Chat = () => {
     };
 
     // Send message via socket
-    socketRef.current.emit("send-message", messageData);
+    socket.emit("send-message", messageData);
 
     // Clear input
     setNewMessage("");

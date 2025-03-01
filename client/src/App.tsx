@@ -19,12 +19,20 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import Profile from "./pages/Profile";
 // import ChatPage from "./components/Chat";
 import { AuthProvider } from "./auth/AuthProvider";
+import { SocketProvider } from "./utils/SocketProvider";
 import ChatCall from "./pages/chat/VideoChat";
 import DocRegister from "./auth/DocRegister";
 import AiDoctor from "./pages/AiDoctor";
 import Ayushman from "./pages/Ayushman";
 
 const queryClient = new QueryClient();
+
+// Wrapper component for authenticated routes with socket connection
+const AuthenticatedRoute = ({ children }) => (
+  <AuthProvider>
+    <SocketProvider>{children}</SocketProvider>
+  </AuthProvider>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -41,9 +49,9 @@ const App = () => (
               <Route
                 path="/"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <Index />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route path="/login" element={<Login />} />
@@ -52,99 +60,92 @@ const App = () => (
               <Route
                 path="/profile"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <Profile />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/health-tracker"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <HealthTracker />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/appointments"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <Appointments />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/preventive-health"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <PreventiveHealth />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/insurance"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <Insurance />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/symptoms"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <Symptoms />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/bmi"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <BMI />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/medicine"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <Medicine />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/chat"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <ChatCall />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/ai-doctor"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <AiDoctor />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
               <Route
                 path="/ayushman"
                 element={
-                  <AuthProvider>
+                  <AuthenticatedRoute>
                     <Ayushman />
-                  </AuthProvider>
+                  </AuthenticatedRoute>
                 }
               />
-              <Route
-                path="*"
-                element={
-                  <AuthProvider>
-                    <NotFound />
-                  </AuthProvider>
-                }
-              />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

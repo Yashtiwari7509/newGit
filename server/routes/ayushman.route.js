@@ -1,7 +1,7 @@
-import express from "express";
-import puppeteer from "puppeteer";
-import { validateAadhaar, isValidMobile } from "../utils/validation.js";
-import axios from "axios";
+import express from 'express';
+import puppeteer from 'puppeteer';
+import { validateAadhaar, isValidMobile } from '../utils/validation.js';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ const MOCK_DATA = {
     validUntil: "2025-12-31",
     status: "Active",
     availableBalance: "₹5,00,000",
-    usedAmount: "₹50,000",
+    usedAmount: "₹50,000"
   },
   hospitals: [
     {
@@ -25,7 +25,7 @@ const MOCK_DATA = {
       phone: "+91 98765 43210",
       specialties: ["General Medicine", "Cardiology", "Orthopedics"],
       rating: 4.5,
-      waitTime: "15 mins",
+      waitTime: "15 mins"
     },
     {
       id: 2,
@@ -35,7 +35,7 @@ const MOCK_DATA = {
       phone: "+91 98765 43211",
       specialties: ["Neurology", "Oncology", "Pediatrics"],
       rating: 4.8,
-      waitTime: "30 mins",
+      waitTime: "30 mins"
     },
     {
       id: 3,
@@ -45,8 +45,8 @@ const MOCK_DATA = {
       phone: "+91 98765 43212",
       specialties: ["Family Medicine", "Emergency Care"],
       rating: 4.2,
-      waitTime: "10 mins",
-    },
+      waitTime: "10 mins"
+    }
   ],
   claims: [
     {
@@ -55,7 +55,7 @@ const MOCK_DATA = {
       hospital: "City General Hospital",
       treatment: "Emergency Care",
       amount: 25000,
-      status: "Approved",
+      status: "Approved"
     },
     {
       id: "CLM002",
@@ -63,9 +63,9 @@ const MOCK_DATA = {
       hospital: "Medicare Superspeciality",
       treatment: "Surgery",
       amount: 150000,
-      status: "Processing",
-    },
-  ],
+      status: "Processing"
+    }
+  ]
 };
 
 // Helper function for debugging element presence
@@ -75,11 +75,11 @@ const debugElement = async (page, selector) => {
     if (element) {
       return {
         exists: true,
-        visible: window.getComputedStyle(element).display !== "none",
+        visible: window.getComputedStyle(element).display !== 'none',
         tag: element.tagName,
         type: element.type,
         id: element.id,
-        classes: Array.from(element.classList),
+        classes: Array.from(element.classList)
       };
     }
     return { exists: false };
@@ -104,17 +104,17 @@ const waitAndClick = async (page, selector, timeout = 5000) => {
 let hospitalsCache = {
   data: null,
   lastFetched: null,
-  expiryTime: 30 * 60 * 1000, // 30 minutes
+  expiryTime: 30 * 60 * 1000 // 30 minutes
 };
 
 // Get Ayushman card details
-router.get("/details", async (req, res) => {
+router.get('/details', async (req, res) => {
   try {
     // For development, return mock data
     res.json({
       success: true,
       data: MOCK_DATA.cardDetails,
-      isMockData: true,
+      isMockData: true
     });
 
     /* Commented out real implementation for now
@@ -148,22 +148,22 @@ router.get("/details", async (req, res) => {
     });
     */
   } catch (error) {
-    console.error("Error fetching card details:", error);
+    console.error('Error fetching card details:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch card details",
+      message: 'Failed to fetch card details'
     });
   }
 });
 
 // Get nearby hospitals
-router.get("/hospitals", async (req, res) => {
+router.get('/hospitals', async (req, res) => {
   try {
     // For development, return mock data
     res.json({
       success: true,
       data: MOCK_DATA.hospitals,
-      isMockData: true,
+      isMockData: true
     });
 
     /* Commented out real implementation for now
@@ -231,23 +231,23 @@ router.get("/hospitals", async (req, res) => {
     }
     */
   } catch (error) {
-    console.error("Error fetching hospitals:", error);
+    console.error('Error fetching hospitals:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch nearby hospitals",
-      error: error.message,
+      message: 'Failed to fetch nearby hospitals',
+      error: error.message
     });
   }
 });
 
 // Get recent claims
-router.get("/claims", async (req, res) => {
+router.get('/claims', async (req, res) => {
   try {
     // For development, return mock data
     res.json({
       success: true,
       data: MOCK_DATA.claims,
-      isMockData: true,
+      isMockData: true
     });
 
     /* Commented out real implementation for now
@@ -281,16 +281,16 @@ router.get("/claims", async (req, res) => {
     });
     */
   } catch (error) {
-    console.error("Error fetching claims:", error);
+    console.error('Error fetching claims:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch recent claims",
+      message: 'Failed to fetch recent claims'
     });
   }
 });
 
 // Ayushman card download endpoint
-router.post("/download", async (req, res) => {
+router.post('/download', async (req, res) => {
   try {
     const { aadhaarNumber, mobileNumber } = req.body;
 
@@ -298,7 +298,7 @@ router.post("/download", async (req, res) => {
     if (!aadhaarNumber || !mobileNumber) {
       return res.status(400).json({
         success: false,
-        message: "Aadhaar number and mobile number are required",
+        message: 'Aadhaar number and mobile number are required'
       });
     }
 
@@ -306,7 +306,7 @@ router.post("/download", async (req, res) => {
     if (!validateAadhaar(aadhaarNumber)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Aadhaar number format",
+        message: 'Invalid Aadhaar number format'
       });
     }
 
@@ -314,7 +314,7 @@ router.post("/download", async (req, res) => {
     if (!isValidMobile(mobileNumber)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid mobile number format",
+        message: 'Invalid mobile number format'
       });
     }
 
@@ -322,22 +322,22 @@ router.post("/download", async (req, res) => {
     res.json({
       success: true,
       data: {
-        downloadLink: "https://example.com/mock-ayushman-card.pdf",
-        message: "This is a mock download link",
+        downloadLink: 'https://example.com/mock-ayushman-card.pdf',
+        message: 'This is a mock download link'
       },
-      isMockData: true,
+      isMockData: true
     });
   } catch (error) {
-    console.error("Error downloading card:", error);
+    console.error('Error downloading card:', error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to download card",
+      message: error.message || 'Failed to download card'
     });
   }
 });
 
 // Ayushman card status check endpoint
-router.post("/check-status", async (req, res) => {
+router.post('/check-status', async (req, res) => {
   let browser = null;
   try {
     const { aadhaarNumber, mobileNumber } = req.body;
@@ -346,7 +346,7 @@ router.post("/check-status", async (req, res) => {
     if (!aadhaarNumber || !mobileNumber) {
       return res.status(400).json({
         success: false,
-        message: "Aadhaar number and mobile number are required",
+        message: 'Aadhaar number and mobile number are required'
       });
     }
 
@@ -354,7 +354,7 @@ router.post("/check-status", async (req, res) => {
     if (!validateAadhaar(aadhaarNumber)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Aadhaar number format",
+        message: 'Invalid Aadhaar number format'
       });
     }
 
@@ -362,23 +362,21 @@ router.post("/check-status", async (req, res) => {
     if (!isValidMobile(mobileNumber)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid mobile number format",
+        message: 'Invalid mobile number format'
       });
     }
 
     // Launch browser with additional options
     browser = await puppeteer.launch({
-      headless: "new",
+      headless: 'new', // Use headless mode for production
       args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process",
-        "--disable-gpu",
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--window-size=1366,768'
       ],
+      defaultViewport: { width: 1366, height: 768 }
     });
 
     const page = await browser.newPage();
@@ -388,69 +386,62 @@ router.post("/check-status", async (req, res) => {
     page.setDefaultTimeout(30000);
 
     // Navigate to PMJAY beneficiary status check page
-    console.log("Navigating to PMJAY status check page...");
-    await page.goto("https://pmjay.gov.in/check-your-beneficiary-status", {
-      waitUntil: ["networkidle0", "domcontentloaded"],
-      timeout: 60000,
+    console.log('Navigating to PMJAY status check page...');
+    await page.goto('https://pmjay.gov.in/check-your-beneficiary-status', {
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: 60000
     });
 
     // Wait for the form to be loaded
-    await page.waitForFunction(() => document.readyState === "complete");
+    await page.waitForFunction(() => document.readyState === 'complete');
 
     // Fill Aadhaar number
-    const aadhaarInput = await page.waitForSelector("#edit-aadhaar-no", {
-      visible: true,
-    });
+    const aadhaarInput = await page.waitForSelector('#edit-aadhaar-no', { visible: true });
     if (!aadhaarInput) {
-      throw new Error("Could not find Aadhaar input field");
+      throw new Error('Could not find Aadhaar input field');
     }
     await aadhaarInput.click({ clickCount: 3 });
-    await aadhaarInput.press("Backspace");
+    await aadhaarInput.press('Backspace');
     await aadhaarInput.type(aadhaarNumber, { delay: 100 });
 
     // Fill mobile number
-    const mobileInput = await page.waitForSelector("#edit-mobile-no", {
-      visible: true,
-    });
+    const mobileInput = await page.waitForSelector('#edit-mobile-no', { visible: true });
     if (!mobileInput) {
-      throw new Error("Could not find mobile number input field");
+      throw new Error('Could not find mobile number input field');
     }
     await mobileInput.click({ clickCount: 3 });
-    await mobileInput.press("Backspace");
+    await mobileInput.press('Backspace');
     await mobileInput.type(mobileNumber, { delay: 100 });
 
     // Handle captcha if present
-    const captchaPresent = await page.$("#edit-captcha-response");
+    const captchaPresent = await page.$('#edit-captcha-response');
     if (captchaPresent) {
       // Take screenshot of the captcha
-      const captchaElement = await page.$(".captcha");
+      const captchaElement = await page.$('.captcha');
       if (captchaElement) {
         await captchaElement.screenshot({
-          path: "captcha.png",
+          path: 'captcha.png'
         });
-
+        
         return res.status(202).json({
           success: true,
           requiresCaptcha: true,
-          message:
-            "Captcha verification required. Please check captcha.png and submit the code.",
+          message: 'Captcha verification required. Please check captcha.png and submit the code.'
         });
       }
     }
 
     // Click submit button
-    const submitButton = await page.waitForSelector("#edit-submit");
+    const submitButton = await page.waitForSelector('#edit-submit');
     if (!submitButton) {
-      throw new Error("Could not find submit button");
+      throw new Error('Could not find submit button');
     }
     await submitButton.click();
 
     // Wait for response
     await page.waitForFunction(
       () => {
-        const elements = document.querySelectorAll(
-          ".status-message, .alert, .message"
-        );
+        const elements = document.querySelectorAll('.status-message, .alert, .message');
         return elements.length > 0;
       },
       { timeout: 30000 }
@@ -460,26 +451,21 @@ router.post("/check-status", async (req, res) => {
     const statusInfo = await page.evaluate(() => {
       const getElementText = (selector) => {
         const element = document.querySelector(selector);
-        return element ? element.textContent.trim() : "";
+        return element ? element.textContent.trim() : '';
       };
 
       return {
-        status:
-          getElementText(".status-message") ||
-          getElementText(".alert") ||
-          getElementText(".message"),
-        beneficiaryName: getElementText(".beneficiary-name"),
-        familyMembers: Array.from(
-          document.querySelectorAll(".family-member")
-        ).map((el) => el.textContent.trim()),
-        cardNumber: getElementText(".card-number"),
-        eligibilityStatus: getElementText(".eligibility-status"),
-        additionalInfo: getElementText(".additional-info"),
+        status: getElementText('.status-message') || getElementText('.alert') || getElementText('.message'),
+        beneficiaryName: getElementText('.beneficiary-name'),
+        familyMembers: Array.from(document.querySelectorAll('.family-member')).map(el => el.textContent.trim()),
+        cardNumber: getElementText('.card-number'),
+        eligibilityStatus: getElementText('.eligibility-status'),
+        additionalInfo: getElementText('.additional-info')
       };
     });
 
     // Take screenshot of the result
-    await page.screenshot({ path: "status-result.png", fullPage: true });
+    await page.screenshot({ path: 'status-result.png', fullPage: true });
 
     // Close browser
     await browser.close();
@@ -490,23 +476,24 @@ router.post("/check-status", async (req, res) => {
       success: true,
       data: {
         ...statusInfo,
-        screenshotPath: "status-result.png",
-      },
+        screenshotPath: 'status-result.png'
+      }
     });
-  } catch (error) {
-    console.error("Error in Ayushman status check:", error);
 
-    let errorMessage = "Failed to check Ayushman card status";
-    if (error.message.includes("timeout")) {
-      errorMessage = "The request timed out. Please try again.";
-    } else if (error.message.includes("Navigation")) {
-      errorMessage = "Failed to load the status check page. Please try again.";
+  } catch (error) {
+    console.error('Error in Ayushman status check:', error);
+    
+    let errorMessage = 'Failed to check Ayushman card status';
+    if (error.message.includes('timeout')) {
+      errorMessage = 'The request timed out. Please try again.';
+    } else if (error.message.includes('Navigation')) {
+      errorMessage = 'Failed to load the status check page. Please try again.';
     }
 
     res.status(500).json({
       success: false,
       message: errorMessage,
-      error: error.message,
+      error: error.message
     });
   } finally {
     if (browser) {
@@ -516,7 +503,7 @@ router.post("/check-status", async (req, res) => {
 });
 
 // Route to submit captcha if required
-router.post("/submit-captcha", async (req, res) => {
+router.post('/submit-captcha', async (req, res) => {
   let browser = null;
   try {
     const { aadhaarNumber, mobileNumber, captchaCode } = req.body;
@@ -524,19 +511,20 @@ router.post("/submit-captcha", async (req, res) => {
     if (!captchaCode) {
       return res.status(400).json({
         success: false,
-        message: "Captcha code is required",
+        message: 'Captcha code is required'
       });
     }
 
     // Similar browser setup and navigation code...
     // Fill in the form including captcha and submit
     // Extract and return results...
+
   } catch (error) {
-    console.error("Error in captcha submission:", error);
+    console.error('Error in captcha submission:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to submit captcha",
-      error: error.message,
+      message: 'Failed to submit captcha',
+      error: error.message
     });
   } finally {
     if (browser) {
@@ -546,45 +534,45 @@ router.post("/submit-captcha", async (req, res) => {
 });
 
 // Get list of nearby hospitals
-router.get("/hospitals", async (req, res) => {
+router.get('/hospitals', async (req, res) => {
   try {
     // Redirect to official PMJAY hospital search
-    res.redirect("https://hospitals.pmjay.gov.in/");
+    res.redirect('https://hospitals.pmjay.gov.in/');
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Failed to redirect to hospital search",
-      error: error.message,
+      message: 'Failed to redirect to hospital search',
+      error: error.message
     });
   }
 });
 
 // Get eligibility information
-router.get("/eligibility", async (req, res) => {
+router.get('/eligibility', async (req, res) => {
   try {
     // Redirect to official eligibility check page
-    res.redirect("https://pmjay.gov.in/check-your-eligibility");
+    res.redirect('https://pmjay.gov.in/check-your-eligibility');
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Failed to redirect to eligibility check",
-      error: error.message,
+      message: 'Failed to redirect to eligibility check',
+      error: error.message
     });
   }
 });
 
 // Get e-card
-router.get("/e-card", async (req, res) => {
+router.get('/e-card', async (req, res) => {
   try {
     // Redirect to official e-card portal
-    res.redirect("https://mera.pmjay.gov.in/search/login");
+    res.redirect('https://mera.pmjay.gov.in/search/login');
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Failed to redirect to e-card portal",
-      error: error.message,
+      message: 'Failed to redirect to e-card portal',
+      error: error.message
     });
   }
 });
 
-export default router;
+export default router; 

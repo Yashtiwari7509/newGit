@@ -2,6 +2,8 @@ import { Server } from "socket.io";
 
 import mongoose from "mongoose";
 import { Conversation, Message } from "../models/chat.model.js";
+import User from "../models/user.model.js";
+import Doctor from "../models/doctor.model.js";
 
 // Track online users
 const onlineUsers = new Map();
@@ -19,7 +21,7 @@ export function setupSocketIO(server) {
     console.log("User connected:", socket.id);
 
     // Handle user connection
-    socket.on("user-connect", (userData) => {
+    socket.on("user-connect", async (userData) => {
       const { userId, userType } = userData;
 
       if (userId) {
@@ -30,6 +32,23 @@ export function setupSocketIO(server) {
           isOnline: true,
         });
 
+        // Update database with online status
+        try {
+          if (userType === "user") {
+            await User.findByIdAndUpdate(userId, {
+              isOnline: true,
+              lastActive: new Date(),
+            });
+          } else if (userType === "doctor") {
+            await Doctor.findByIdAndUpdate(userId, {
+              isOnline: true,
+              lastActive: new Date(),
+            });
+          }
+        } catch (error) {
+          console.error("Error updating online status in database:", error);
+        }
+
         // Broadcast user online status
         io.emit("user-status-change", {
           userId,
@@ -39,17 +58,37 @@ export function setupSocketIO(server) {
     });
 
     // Handle disconnection
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log("User disconnected:", socket.id);
 
       // Find and remove the disconnected user
       for (const [key, value] of onlineUsers.entries()) {
         if (value.socketId === socket.id) {
+          const userId = key;
+          const userType = value.userType;
+
           onlineUsers.delete(key);
+
+          // Update database with offline status
+          try {
+            if (userType === "user") {
+              await User.findByIdAndUpdate(userId, {
+                isOnline: false,
+                lastActive: new Date(),
+              });
+            } else if (userType === "doctor") {
+              await Doctor.findByIdAndUpdate(userId, {
+                isOnline: false,
+                lastActive: new Date(),
+              });
+            }
+          } catch (error) {
+            console.error("Error updating offline status in database:", error);
+          }
 
           // Broadcast user offline status
           io.emit("user-status-change", {
-            userId: key,
+            userId,
             isOnline: false,
           });
           break;
@@ -174,7 +213,7 @@ export function setupSocketIO(server) {
     socket.on("get-conversations", async ({ userId }) => {
       try {
         const userConversations = await Conversation.find({
-          "participants.id":new mongoose.Types.ObjectId(userId),
+          "participants.id": new mongoose.Types.ObjectId(userId),
         }).sort({ "lastMessage.timestamp": -1 });
 
         socket.emit("user-conversations", { conversations: userConversations });
