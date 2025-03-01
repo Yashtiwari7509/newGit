@@ -3,7 +3,7 @@ import { getToken } from "../hooks/auth"; // Import function to get stored token
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: "http://localhost:8000", // Backend URL
+  baseURL: `${import.meta.env.VITE_BASE_URL}/api`, // Backend URL
 });
 
 // Attach token dynamically to every request

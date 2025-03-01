@@ -15,13 +15,15 @@ const app = express();
 connectToDb().catch(console.error);
 
 // Configure CORS with more options
-app.use(cors({
-  origin: ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:8000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -29,9 +31,9 @@ app.use(express.urlencoded({ extended: false }));
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  res.status(500).json({
+    message: "Something went wrong!",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 });
 

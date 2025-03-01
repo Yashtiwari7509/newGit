@@ -58,9 +58,13 @@ const DoctorSchema = new Schema(
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         rating: { type: Number, min: 1, max: 5 },
         comment: String,
+        userFirstName: String,
+        userLastName: String,
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    averageRating: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
 
     isOnline: { type: Boolean, default: false }, // Tracks if doctor is online
     lastActive: { type: Date, default: Date.now },

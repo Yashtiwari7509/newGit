@@ -6,8 +6,10 @@ import {
   getDoctorProfile,
   getAvailableDoctors,
   updateDoctorStatus,
+  addReview,
+  getReviews,
 } from "../controller/doctor.controller.js";
-import { authDoctor } from "../middleware/auth.middleware.js";
+import { authDoctor, authUser } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -55,5 +57,21 @@ router.get("/profile", authDoctor, getDoctorProfile);
 router.put("/status", updateDoctorStatus);
 
 router.get("/available", getAvailableDoctors);
+
+// Review Routes
+router.post(
+  "/reviews",
+  [
+    body("rating")
+      .isInt({ min: 1, max: 5 })
+      .withMessage("Rating must be between 1 and 5"),
+    body("comment").optional().isString().trim(),
+    body("doctorId").isMongoId().withMessage("Invalid doctor ID"),
+  ],
+  authUser,
+  addReview
+);
+
+router.get("/reviews", authUser, getReviews);
 
 export default router;

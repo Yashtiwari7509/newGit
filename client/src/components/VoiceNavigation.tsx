@@ -160,7 +160,7 @@ const VoiceNavigation: React.FC = () => {
   const { toast } = useToast();
   const { currentUser, userType } = useAuth();
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:8000";
 
   // Add new state for visualization
   const [visualizerData, setVisualizerData] = useState<number[]>(Array(10).fill(0.2));

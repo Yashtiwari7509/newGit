@@ -57,7 +57,7 @@ const GoogleFitDashboard: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // Get the API base URL from environment or use default
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:8000";
 
   const storeFitnessData = async (data: FitnessData[]) => {
     try {

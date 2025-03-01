@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useLocation } from "react-router-dom"; // 🔹 Added `useLocation`
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom"; // 🔹 Added `useLocation`
 import api from "@/utils/api";
 import { getToken, getUserType } from "@/hooks/auth";
 import { profileProps, doctorProfileProps } from "@/lib/user.type";
-import { LoaderIcon } from "lucide-react";
 import "@/App.css";
 
 interface AuthContextType {
@@ -17,9 +16,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }) => {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const location = useLocation(); // 🔹 Get current route
   const token = getToken();
   const userType = getUserType();
 

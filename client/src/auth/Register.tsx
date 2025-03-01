@@ -51,11 +51,6 @@ const formSchema = z.object({
   }),
 });
 
-const handleRegister = async (values) => {
-  const data = axios.post("http://localhost:8000/users/register", values);
-  return data;
-};
-
 const Register = () => {
   const { toast } = useToast();
   const navigate = useNavigate();

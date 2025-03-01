@@ -9,7 +9,7 @@ const onlineUsers = new Map();
 export function setupSocketIO(server) {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:8080",
+      origin: "*",
       methods: ["GET", "POST"],
       credentials: true,
     },

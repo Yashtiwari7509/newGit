@@ -127,21 +127,21 @@ const Ayushman = () => {
       try {
         // Fetch card details
         setTimeout(async () => {
-          const detailsResponse = await api.get('/api/ayushman/details');
+          const detailsResponse = await api.get('/ayushman/details');
           setAyushmanDetails(detailsResponse.data.data);
           setLoading(prev => ({ ...prev, details: false }));
         }, 1500);
 
         // Fetch hospitals with longer delay
         setTimeout(async () => {
-          const hospitalsResponse = await api.get('/api/ayushman/hospitals');
+          const hospitalsResponse = await api.get('/ayushman/hospitals');
           setNearbyHospitals(hospitalsResponse.data.data);
           setLoading(prev => ({ ...prev, hospitals: false }));
         }, 2000);
 
         // Fetch claims with medium delay
         setTimeout(async () => {
-          const claimsResponse = await api.get('/api/ayushman/claims');
+          const claimsResponse = await api.get('/ayushman/claims');
           setRecentClaims(claimsResponse.data.data);
           setLoading(prev => ({ ...prev, claims: false }));
         }, 1800);
@@ -470,7 +470,7 @@ const Ayushman = () => {
                         <p className="text-sm font-medium">₹{claim.amount.toLocaleString()}</p>
                       </div>
                       <Badge
-                        variant={claim.status === "Approved" ? "success" : "warning"}
+                        variant={claim.status === "Approved" ? "secondary" : "destructive"}
                         className="flex items-center gap-1"
                       >
                         {claim.status === "Approved" ? (

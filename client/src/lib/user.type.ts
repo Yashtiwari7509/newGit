@@ -28,8 +28,18 @@ interface profileProps {
   location?: locationProp;
 }
 
+export interface Review {
+  _id: string;
+  userId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  userFirstName: string;
+  userLastName: string;
+}
+
 interface doctorProfileProps {
-  _id?:string;
+  _id?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -37,6 +47,42 @@ interface doctorProfileProps {
   isOnline?: boolean;
   location?: locationProp;
   specialization?: string;
-  experience? : number;
+  experience?: number;
+  reviews?: Review[];
+  averageRating?: number;
+  totalReviews?: number;
+  qualifications?: string[];
+  availability?: {
+    day: string;
+    startTime: string;
+    endTime: string;
+  }[];
 }
-export type { UserProps, cardsProps, profileProps, doctorProfileProps };
+interface doctor_UserProps {
+  _id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  isOnline?: boolean;
+  location?: locationProp;
+  specialization?: string;
+  experience?: number;
+  qualifications: string[];
+  reviews?: Review[];
+  averageRating?: number;
+  totalReviews?: number;
+  availability?: {
+    day: string;
+    startTime: string;
+    endTime: string;
+  }[];
+}
+
+export type {
+  UserProps,
+  cardsProps,
+  profileProps,
+  doctorProfileProps,
+  doctor_UserProps,
+};

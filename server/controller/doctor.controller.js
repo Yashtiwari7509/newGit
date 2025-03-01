@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import doctorModel from "../models/doctor.model.js";
 import jwt from "jsonwebtoken";
+import userModel from "../models/user.model.js";
 
 export async function registerDoctor(req, res) {
   try {
@@ -113,8 +114,8 @@ export const getDoctorProfile = async (req, res) => {
 
 export const updateDoctorStatus = async (req, res) => {
   try {
-    console.log('hello from asy');
-    
+    console.log("hello from asy");
+
     // Extract token from headers
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -196,7 +197,8 @@ export const getAvailableDoctors = async (req, res) => {
     }
 
     // Find doctors matching the criteria
-    const doctors = await doctorModel.find(query)
+    const doctors = await doctorModel
+      .find(query)
       .select({
         firstName: 1,
         lastName: 1,
@@ -220,6 +222,149 @@ export const getAvailableDoctors = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching doctors",
+      error: error.message,
+    });
+  }
+};
+
+export const addReview = async (req, res) => {
+  try {
+    const { doctorId, rating, comment } = req.body;
+
+    // Validate input
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5",
+      });
+    }
+
+    // Get user from request (set by authUser middleware)
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    // Find the doctor and add the review
+    const doctor = await doctorModel.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    // Ensure reviews array exists
+    if (!doctor.reviews) {
+      doctor.reviews = [];
+    }
+
+    // Check if user has already reviewed this doctor
+    const existingReviewIndex = doctor.reviews.findIndex(
+      (review) => review.userId && review.userId.equals(user._id)
+    );
+
+    // Parse rating as number
+    const numericRating = Number(rating);
+
+    if (existingReviewIndex !== -1) {
+      // Update existing review
+      doctor.reviews[existingReviewIndex] = {
+        ...doctor.reviews[existingReviewIndex],
+        rating: numericRating,
+        comment,
+        userFirstName: user.firstName,
+        userLastName: user.lastName,
+        createdAt: new Date(),
+      };
+    } else {
+      // Add new review
+      doctor.reviews.push({
+        userId: user._id,
+        rating: numericRating,
+        comment,
+        userFirstName: user.firstName,
+        userLastName: user.lastName,
+        createdAt: new Date(),
+      });
+    }
+
+    // Calculate average rating safely
+    const validRatings = doctor.reviews.filter(
+      (review) => !isNaN(review.rating)
+    );
+    const totalRating = validRatings.reduce(
+      (sum, review) => sum + Number(review.rating),
+      0
+    );
+    const numRatings = validRatings.length;
+
+    // Set average rating and total reviews
+    doctor.averageRating =
+      numRatings > 0 ? Number((totalRating / numRatings).toFixed(1)) : 0;
+    doctor.totalReviews = doctor.reviews.length;
+
+    await doctor.save();
+
+    res.status(200).json({
+      success: true,
+      message:
+        existingReviewIndex !== -1
+          ? "Review updated successfully"
+          : "Review added successfully",
+      data: {
+        review:
+          doctor.reviews[
+            existingReviewIndex !== -1
+              ? existingReviewIndex
+              : doctor.reviews.length - 1
+          ],
+        averageRating: doctor.averageRating,
+        totalReviews: doctor.totalReviews,
+      },
+    });
+  } catch (error) {
+    console.error("Error adding review:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while adding review",
+      error: error.message,
+    });
+  }
+};
+
+export const getReviews = async (req, res) => {
+  try {
+    const { doctorId } = req.body;
+
+    const doctor = await doctorModel
+      .findById(doctorId)
+      .select("reviews averageRating totalReviews")
+      .populate("reviews.userId", "firstName lastName");
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        reviews: doctor.reviews,
+        averageRating: doctor.averageRating,
+        totalReviews: doctor.totalReviews,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching reviews",
       error: error.message,
     });
   }

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import { useAuth } from "@/auth/AuthProvider";
 
 const sidebarItems = [
   { icon: Home, label: "Dashboard", path: "/" },
@@ -40,6 +41,7 @@ export function Sidebar() {
   const location = useLocation();
   const [toggleState, setToggleState] = useState(true);
 
+  const { userType } = useAuth();
   // Function to toggle sidebar using CSS class
   const toggleSidebar = () => {
     const sidebar = document.getElementById("sidebar");
@@ -117,9 +119,12 @@ export function Sidebar() {
         {/* Chat with Doctor */}
         <div className="border-t p-4">
           <Button asChild className="w-full" variant="outline">
-            <Link to="/chat" className="flex items-center gap-2 hover:bg-primary">
+            <Link
+              to="/chat"
+              className="flex items-center gap-2 hover:bg-primary"
+            >
               <MessageSquare className="h-4 w-4" />
-              Chat with Doctor
+              Chat with {userType === "user" ? "Doctor" : "Patients"}
             </Link>
           </Button>
         </div>
