@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: healthcare-api
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8000
+      - key: MONGODB_URI
+        sync: false
+      - key: SECRET_TOKEN
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
